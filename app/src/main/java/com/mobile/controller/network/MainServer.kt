@@ -1,13 +1,13 @@
 package com.mobile.controller.network
 
 import com.mobile.controller.api.ApiRouter
-import com.mobile.controller.api.BaseRequest
+import com.mobile.controller.api.GenericRequest
 import fi.iki.elonen.NanoHTTPD
 
 class WebServer(port: Int, private val router: ApiRouter) : NanoHTTPD(port) {
     override fun serve(session: IHTTPSession): Response {
 
-        val request = BaseRequest(
+        val request = GenericRequest(
             session.method.name,
             session.uri,
             session.parameters.mapValues {  it.value.firstOrNull() ?: "" },

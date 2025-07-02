@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.mobile.controller.api.ApiRouter
+import com.mobile.controller.handlers.OpenCameraHandler
+import com.mobile.controller.handlers.TakePhotoHandler
 import com.mobile.controller.network.WebServer
 
 import com.mobile.controller.ui.theme.ControllerTheme
@@ -23,8 +25,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val handlers = listOf(
-            GetPropertiesHandler()
+            GetPropertiesHandler(),
+            OpenCameraHandler(),
+            TakePhotoHandler()
         )
+
         val router = ApiRouter(handlers)
 
         val webServer = WebServer(50012, router)

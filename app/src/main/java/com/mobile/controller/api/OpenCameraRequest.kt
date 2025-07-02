@@ -1,18 +1,18 @@
 package com.mobile.controller.api
 
 class OpenCameraRequest(
-    method: String,
-    uri: String,
-    params: Map<String, String> = emptyMap(),
-    body: String = ""
-) : ApiRequest(method, uri, params, body) {
+    override val method: String,
+    override val uri: String,
+    override val params: Map<String, String> = emptyMap(),
+    override val body: String = ""
+) : ApiRequest {
 
-    val details: String
-        get() = params["details"] ?: "basic"
 }
 
-class OpenCameraResponse(body: String) : ApiResponse(
-    code = 200,
-    contentType = "application/json",
-    body = body
-)
+class OpenCameraResponse(
+    override val code: Int = 200,
+    override val contentType: String = "application/json",
+    override val body: String
+) : ApiResponse
+
+

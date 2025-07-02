@@ -1,30 +1,27 @@
 package com.mobile.controller.api
 
-abstract class ApiRequest(
-    var method: String,
-    var uri: String,
-    var params: Map<String, String> = emptyMap(),
-    var body: String = ""
-)
+interface ApiRequest {
+    val method: String
+    val uri: String
+    val params: Map<String, String>
+    val body: String
+}
 
-abstract class ApiResponse(
-    var code: Int,
-    var contentType: String = "application/json",
-    var body: String
-)
+interface ApiResponse {
+    val code: Int
+    val contentType: String
+    val body: String
+}
 
-class BaseRequest(
-    method: String,
-    uri: String,
-    params: Map<String, String> = emptyMap(),
-    body: String = ""
-) : ApiRequest(method, uri, params, body)
+class GenericRequest(
+    override val method: String,
+    override val uri: String,
+    override val params: Map<String, String> = emptyMap(),
+    override val body: String = ""
+) : ApiRequest
 
 class ErrorResponse(
-    code: Int,
-    body: String
-) : ApiResponse(
-    code = code,
-    contentType = "application/json",
-    body = body
-)
+    override val code: Int,
+    override val body: String,
+    override val contentType: String = "application/json"
+) : ApiResponse

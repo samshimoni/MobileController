@@ -8,11 +8,8 @@ class GetPropertiesHandler : ApiHandler {
     override val path: String = "/get_properties"
 
     override fun handle(request: ApiRequest): ApiResponse {
-        val res = getProperties();
-        return GetPropertiesResponse(res);
+        return GetPropertiesResponse(code = 200, body = " { result: this is all the properties } ")
     }
 
-    private  fun getProperties(): String {
-        return """{"device":"Pixel 7","version":"13","serial":"XYZ123"}""";
-    }
+
 }
