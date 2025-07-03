@@ -12,6 +12,8 @@ class OpenCameraResponse(
     override val code: Int = 200,
     override val contentType: String = "application/json",
     override val body: String
-) : ApiResponse
+) : ApiResponse{
+
+}
 
 

@@ -6,6 +6,7 @@ interface ApiRequest {
     val body: String
 }
 
+
 interface ApiResponse {
     val code: Int
     val contentType: String
