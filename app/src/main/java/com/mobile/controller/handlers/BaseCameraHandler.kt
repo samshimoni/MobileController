@@ -7,24 +7,23 @@ import android.util.Log
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.mobile.controller.api.ApiHandler
 import com.mobile.controller.api.ApiRequest
+import com.mobile.controller.api.ApiResponse
 
-abstract class BaseCameraHandler<T : ApiRequest>(
+abstract class BaseCameraHandler<Req : ApiRequest, Res : ApiResponse>(
     protected val context: Context,
     protected val lifecycleOwner: LifecycleOwner
-) : ApiHandler<T> {
+) : ApiHandler<Req, Res> {
 
-    protected fun validateCameraResourcePermissions(): Boolean {
-        val hasPermission = ContextCompat.checkSelfPermission(
+    protected fun hasCameraPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
-        return hasPermission
     }
 
-    protected fun withCameraProvider(
-        onReady: (ProcessCameraProvider) -> Unit
-    ) {
+    protected fun withCameraProvider(onReady: (ProcessCameraProvider) -> Unit) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 
         cameraProviderFuture.addListener({
@@ -32,7 +31,7 @@ abstract class BaseCameraHandler<T : ApiRequest>(
                 val cameraProvider = cameraProviderFuture.get()
                 onReady(cameraProvider)
             } catch (e: Exception) {
-                Log.e("CameraX", "Failed to get camera provider", e)
+                Log.e("CameraX", "Error retrieving camera provider", e)
             }
         }, ContextCompat.getMainExecutor(context))
     }

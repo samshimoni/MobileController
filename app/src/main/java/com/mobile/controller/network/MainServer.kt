@@ -1,42 +1,34 @@
 package com.mobile.controller.network
 
-import com.mobile.controller.api.ApiRouter
-import com.mobile.controller.api.GenericRequest
+
 import fi.iki.elonen.NanoHTTPD
 
 class WebServer(port: Int, private val router: ApiRouter) : NanoHTTPD(port) {
+
     override fun serve(session: IHTTPSession): Response {
-        val map = HashMap<String, String>()
-        try {
-            session.parseBody(map)
-        } catch (e: Exception) {
-            return newFixedLengthResponse(
-                Response.Status.INTERNAL_ERROR,
-                "text/plain",
-                "Failed to parse request body: ${e.message}"
-            )
+        val contentLength = session.headers["content-length"]?.toIntOrNull() ?: 0
+        val body = if (contentLength > 0) {
+            val buffer = ByteArray(contentLength)
+            session.inputStream.read(buffer, 0, contentLength)
+            String(buffer)
+        } else {
+            ""
         }
 
-        val body = map["postData"] ?: ""
-
-        // Parse query parameters (GET-style) if present
         val params = session.parameters.mapValues { it.value.firstOrNull() ?: "" }
+        val method = session.method.name
+        val uri = session.uri
 
-        val request = GenericRequest(
-            session.uri,
-            params,
-            body
-        )
-
-        val response = router.route(request)
+        val response = router.route(uri, method, params, body)
 
         return newFixedLengthResponse(
-            Response.Status.lookup(response.code) ?: Response.Status.OK,
+            Response.Status.lookup(response.status) ?: Response.Status.OK,
             response.contentType,
             response.body
         )
     }
 }
+
 
 
 

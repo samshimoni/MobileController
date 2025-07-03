@@ -1,11 +1,30 @@
 package com.mobile.controller.handlers
 
-import com.mobile.controller.api.ApiRequest
-import com.mobile.controller.api.GetPropertiesRequest
-import com.mobile.controller.api.GetPropertiesResponse
-import kotlinx.serialization.Serializable
+import com.mobile.controller.api.ApiHandler
+import com.mobile.controller.requests.GetPropertiesRequest
+import com.mobile.controller.requests.GetPropertiesResponse
 
-class GetPropertiesHandler : ApiHandler<GetPropertiesRequest> {
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+class GetPropertiesHandler : ApiHandler<GetPropertiesRequest, GetPropertiesResponse> {
+    override val path: String = "/api/get_properties"
+
+    override fun createRequest(method: String, params: Map<String, String>, body: String): GetPropertiesRequest {
+
+        return if (method == "GET") {
+            GetPropertiesRequest(uri = path)
+        } else {
+            val json = Json { ignoreUnknownKeys = true }
+            json.decodeFromString<GetPropertiesRequest>(body)
+        }
+    }
+
+    override fun handle(request: GetPropertiesRequest): GetPropertiesResponse {
+        val deviceInfo = getDeviceInfo()
+        return GetPropertiesResponse(body = Json.encodeToString(deviceInfo))
+    }
 
     @Serializable
     private data class DeviceInfo(
@@ -17,25 +36,7 @@ class GetPropertiesHandler : ApiHandler<GetPropertiesRequest> {
         val abis: String
     )
 
-    override val path: String = "/get_properties"
-    override val method = "GET"
-
-    override fun handle(request: GetPropertiesRequest): GetPropertiesResponse {
-
-        return GetPropertiesResponse(
-            body =getDeviceInfo().toString()
-        )
-    }
-
-    override fun parseRequest(raw: ApiRequest): GetPropertiesRequest {
-        return GetPropertiesRequest(
-            uri = raw.uri,
-            params = raw.params,
-            body = raw.body
-        )
-    }
-
-    private fun getDeviceInfo() : DeviceInfo {
+        private fun getDeviceInfo() : DeviceInfo {
         return DeviceInfo(
             androidVersion = android.os.Build.VERSION.RELEASE ?: "unknown",
             sdkInt = android.os.Build.VERSION.SDK_INT,

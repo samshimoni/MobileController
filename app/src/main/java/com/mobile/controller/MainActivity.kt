@@ -13,10 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.mobile.controller.api.ApiRouter
 import com.mobile.controller.handlers.OpenCameraHandler
 import com.mobile.controller.handlers.TakePhotoHandler
+
+
 import com.mobile.controller.network.WebServer
+import com.mobile.controller.network.ApiRouter
 
 import com.mobile.controller.ui.theme.ControllerTheme
 

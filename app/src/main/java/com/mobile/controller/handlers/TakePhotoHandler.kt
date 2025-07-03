@@ -1,7 +1,6 @@
 package com.mobile.controller.handlers
 
 import android.content.Context
-import android.os.Environment
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -9,49 +8,50 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import com.mobile.controller.api.ApiRequest
-import com.mobile.controller.api.TakePhotoRequest
-import com.mobile.controller.api.TakePhotoResponse
+import com.mobile.controller.requests.TakePhotoRequest
+import com.mobile.controller.requests.TakePhotoResponse
+import kotlinx.serialization.json.Json
 import java.io.File
 
 class TakePhotoHandler(
     context: Context,
     lifecycleOwner: LifecycleOwner
-) : BaseCameraHandler<TakePhotoRequest>(context, lifecycleOwner) {
+) : BaseCameraHandler<TakePhotoRequest, TakePhotoResponse>(context, lifecycleOwner) {
 
-    override val path: String = "/take_photo"
-    override val method = "GET"
+    override val path: String = "/api/take_photo"
 
-    override fun parseRequest(raw: ApiRequest): TakePhotoRequest {
-        return TakePhotoRequest(
-            uri = raw.uri,
-            params = raw.params,
-            body = raw.body
-        )
+    override fun createRequest(method: String, params: Map<String, String>, body: String): TakePhotoRequest {
+        if (method != "POST") {
+            throw IllegalArgumentException("TakePhotoHandler only supports POST method")
+        }
+        val json = Json { ignoreUnknownKeys = true }
+        return json.decodeFromString(TakePhotoRequest.serializer(), body)
     }
 
     override fun handle(request: TakePhotoRequest): TakePhotoResponse {
-
-        if (!this.validateCameraResourcePermissions()){
+        if (!hasCameraPermission()) {
             return TakePhotoResponse(
-                body = """{ "status": "Error", "message": "Permission Denied"}"""
+                status = 403,
+                body = """{"status": "error", "message": "Permission Denied"}"""
             )
         }
 
-        this.capturePhotoOnceAndRelease()
+        capturePhotoOnceAndRelease(request.path)
 
         return TakePhotoResponse(
-            body = """{ "status": "Success", "message": "Photo took successfully"}"""
+            status = 200,
+            body = """{"status": "success", "message": "Photo capture started"}"""
         )
     }
 
-    private fun capturePhotoOnceAndRelease() {
+    private fun capturePhotoOnceAndRelease(savePath: String) {
         withCameraProvider { cameraProvider ->
             val imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
 
             try {
+
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(
                     lifecycleOwner,
@@ -63,18 +63,19 @@ class TakePhotoHandler(
                 return@withCameraProvider
             }
 
-            takePhoto(cameraProvider, imageCapture)
+            takePhoto(cameraProvider, imageCapture, savePath)
         }
     }
 
     private fun takePhoto(
         cameraProvider: ProcessCameraProvider,
-        imageCapture: ImageCapture
+        imageCapture: ImageCapture,
+        savePath: String
     ) {
-        val photoFile = File(
-            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-            "IMG_${System.currentTimeMillis()}.jpg"
-        )
+        val photoFile = File(savePath)
+
+        photoFile.parentFile?.mkdirs()
+
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
         Log.i("CameraX", "Calling takePicture")
