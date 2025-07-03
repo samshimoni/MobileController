@@ -1,7 +1,6 @@
 package com.mobile.controller.api
 
 class OpenCameraRequest(
-    override val method: String,
     override val uri: String,
     override val params: Map<String, String> = emptyMap(),
     override val body: String = ""

@@ -4,6 +4,7 @@ import com.mobile.controller.api.ApiRequest
 import com.mobile.controller.api.ApiResponse
 
 interface ApiHandler {
+    val method: String
     val path: String
     fun handle(request: ApiRequest): ApiResponse
 }

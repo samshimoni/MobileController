@@ -8,7 +8,6 @@ class WebServer(port: Int, private val router: ApiRouter) : NanoHTTPD(port) {
     override fun serve(session: IHTTPSession): Response {
 
         val request = GenericRequest(
-            session.method.name,
             session.uri,
             session.parameters.mapValues {  it.value.firstOrNull() ?: "" },
             "")

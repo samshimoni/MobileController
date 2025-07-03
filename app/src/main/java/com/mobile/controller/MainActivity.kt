@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -26,8 +27,8 @@ class MainActivity : ComponentActivity() {
 
         val handlers = listOf(
             GetPropertiesHandler(),
-            OpenCameraHandler(),
-            TakePhotoHandler()
+            OpenCameraHandler(this, this),
+            TakePhotoHandler(this, this)
         )
 
         val router = ApiRouter(handlers)
