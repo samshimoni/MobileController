@@ -33,7 +33,7 @@ def main():
     parser.add_argument(
         "--action",
         required=True,
-        choices=["get_properties", "open_camera", "take_photo", "all"],
+        choices=["get_properties", "open_camera", "take_photo"],
         help="Action to perform"
     )
     parser.add_argument(
@@ -52,13 +52,6 @@ def main():
     elif args.action == "take_photo":
         if not args.path:
             print("Error: --path is required when action is take_photo")
-            return
-        take_photo(base_url, args.path)
-    elif args.action == "all":
-        get_properties(base_url)
-        open_camera(base_url)
-        if not args.path:
-            print("Error: --path is required when action is all to take a photo.")
             return
         take_photo(base_url, args.path)
 
