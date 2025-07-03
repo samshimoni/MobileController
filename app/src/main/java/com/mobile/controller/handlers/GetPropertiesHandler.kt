@@ -1,12 +1,9 @@
 package com.mobile.controller.handlers
 
 import com.mobile.controller.api.ApiRequest
-import com.mobile.controller.api.ApiResponse
 import com.mobile.controller.api.GetPropertiesRequest
 import com.mobile.controller.api.GetPropertiesResponse
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 class GetPropertiesHandler : ApiHandler<GetPropertiesRequest> {
 
@@ -24,9 +21,10 @@ class GetPropertiesHandler : ApiHandler<GetPropertiesRequest> {
     override val method = "GET"
 
     override fun handle(request: GetPropertiesRequest): GetPropertiesResponse {
-        val info = this.getDeviceInfo();
-        val json = Json { prettyPrint = true }.encodeToString(info)
-        return GetPropertiesResponse(code = 200, body = json)
+
+        return GetPropertiesResponse(
+            body =getDeviceInfo().toString()
+        )
     }
 
     override fun parseRequest(raw: ApiRequest): GetPropertiesRequest {

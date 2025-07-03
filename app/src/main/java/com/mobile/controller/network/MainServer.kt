@@ -6,11 +6,27 @@ import fi.iki.elonen.NanoHTTPD
 
 class WebServer(port: Int, private val router: ApiRouter) : NanoHTTPD(port) {
     override fun serve(session: IHTTPSession): Response {
+        val map = HashMap<String, String>()
+        try {
+            session.parseBody(map)
+        } catch (e: Exception) {
+            return newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "text/plain",
+                "Failed to parse request body: ${e.message}"
+            )
+        }
+
+        val body = map["postData"] ?: ""
+
+        // Parse query parameters (GET-style) if present
+        val params = session.parameters.mapValues { it.value.firstOrNull() ?: "" }
 
         val request = GenericRequest(
             session.uri,
-            session.parameters.mapValues {  it.value.firstOrNull() ?: "" },
-            "")
+            params,
+            body
+        )
 
         val response = router.route(request)
 
@@ -21,3 +37,7 @@ class WebServer(port: Int, private val router: ApiRouter) : NanoHTTPD(port) {
         )
     }
 }
+
+
+
+
