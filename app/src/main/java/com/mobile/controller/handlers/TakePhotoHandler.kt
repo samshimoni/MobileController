@@ -40,7 +40,7 @@ class TakePhotoHandler(
 
         return TakePhotoResponse(
             status = 200,
-            body = """{"status": "success", "message": "Photo capture started"}"""
+            body = """{"status": "success", "message": "Photo captured at ${request.path}}"""
         )
     }
 
