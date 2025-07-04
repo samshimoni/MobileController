@@ -16,9 +16,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.mobile.controller.handlers.OpenCameraHandler
 import com.mobile.controller.handlers.TakePhotoHandler
 
-
 import com.mobile.controller.network.WebServer
 import com.mobile.controller.network.ApiRouter
+import com.mobile.controller.network.RequestFactory
 
 import com.mobile.controller.ui.theme.ControllerTheme
 
@@ -32,7 +32,8 @@ class MainActivity : ComponentActivity() {
             TakePhotoHandler(this, this)
         )
 
-        val router = ApiRouter(handlers)
+        val requestFactory = RequestFactory()
+        val router = ApiRouter(handlers, requestFactory)
 
         val webServer = WebServer(50012, router)
         webServer.start()

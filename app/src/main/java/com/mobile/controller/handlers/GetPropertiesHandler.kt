@@ -11,16 +11,6 @@ import kotlinx.serialization.json.Json
 class GetPropertiesHandler : ApiHandler<GetPropertiesRequest, GetPropertiesResponse> {
     override val path: String = "/api/get_properties"
 
-    override fun createRequest(method: String, params: Map<String, String>, body: String): GetPropertiesRequest {
-
-        return if (method == "GET") {
-            GetPropertiesRequest(uri = path)
-        } else {
-            val json = Json { ignoreUnknownKeys = true }
-            json.decodeFromString<GetPropertiesRequest>(body)
-        }
-    }
-
     override fun handle(request: GetPropertiesRequest): GetPropertiesResponse {
         val deviceInfo = getDeviceInfo()
         return GetPropertiesResponse(body = Json.encodeToString(deviceInfo))

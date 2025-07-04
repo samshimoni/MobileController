@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.mobile.controller.requests.TakePhotoRequest
 import com.mobile.controller.requests.TakePhotoResponse
-import kotlinx.serialization.json.Json
 import java.io.File
 
 class TakePhotoHandler(
@@ -19,14 +18,6 @@ class TakePhotoHandler(
 ) : BaseCameraHandler<TakePhotoRequest, TakePhotoResponse>(context, lifecycleOwner) {
 
     override val path: String = "/api/take_photo"
-
-    override fun createRequest(method: String, params: Map<String, String>, body: String): TakePhotoRequest {
-        if (method != "POST") {
-            throw IllegalArgumentException("TakePhotoHandler only supports POST method")
-        }
-        val json = Json { ignoreUnknownKeys = true }
-        return json.decodeFromString(TakePhotoRequest.serializer(), body)
-    }
 
     override fun handle(request: TakePhotoRequest): TakePhotoResponse {
         if (!hasCameraPermission()) {

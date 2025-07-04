@@ -16,10 +16,6 @@ class OpenCameraHandler(
 
     override val path: String = "/api/open_camera"
 
-    override fun createRequest(method: String, params: Map<String, String>, body: String): OpenCameraRequest {
-        return OpenCameraRequest( uri = path)
-    }
-
     override fun handle(request: OpenCameraRequest): OpenCameraResponse {
         if (!hasCameraPermission()) {
             return OpenCameraResponse(
