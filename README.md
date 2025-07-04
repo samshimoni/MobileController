@@ -81,6 +81,19 @@ A Python CLI script (`controller.py`) is also included for testing these APIs.
 
 ---
 
+## Permissions & Features
+
+This app requires the following permissions to function correctly:
+
+- `CAMERA` — To access the device camera for photo capture and preview.  
+- `WRITE_EXTERNAL_STORAGE` — To save captured photos to device storage.  
+- `INTERNET` — To enable networking features (e.g., HTTP server).  
+- `ACCESS_NETWORK_STATE` — To monitor network connectivity status.
+
+The app declares that the camera hardware feature is **not required** (`android:required="false"`), allowing installation on devices without a camera, though camera features will be limited.
+
+---
+
 ## How to build
 
 ```bash
