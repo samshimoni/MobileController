@@ -16,6 +16,11 @@ abstract class BaseCameraHandler<Req : ApiRequest, Res : ApiResponse>(
     protected val lifecycleOwner: LifecycleOwner
 ) : ApiHandler<Req, Res> {
 
+    /**
+     * Checks whether the app has been granted camera permission.
+     *
+     * @return true if camera permission is granted, false otherwise.
+     */
     protected fun hasCameraPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -23,6 +28,12 @@ abstract class BaseCameraHandler<Req : ApiRequest, Res : ApiResponse>(
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * Asynchronously obtains the [ProcessCameraProvider] and invokes [onReady]
+     * when it is available. Logs errors if retrieval fails.
+     *
+     * @param onReady callback to receive the ready [ProcessCameraProvider].
+     */
     protected fun withCameraProvider(onReady: (ProcessCameraProvider) -> Unit) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 

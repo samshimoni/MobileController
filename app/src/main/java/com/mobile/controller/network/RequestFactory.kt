@@ -20,6 +20,19 @@ class RequestFactory {
         }
     )
 
+    /*
+    createRequest:Get the rest api request and return the suitable ApiRequest
+
+    Parameters:
+    uri: The uri.
+    method: method GET/POST.
+    params: GET parameters.
+    body: POST parameters.
+
+    Returns:
+    ApiResponse: The suitable ApiResponse.
+    */
+
     fun createRequest(
         uri: String,
         method: String,

@@ -16,6 +16,10 @@ class OpenCameraHandler(
 
     override val path: String = "/api/open_camera"
 
+    /**
+     * Handles an [OpenCameraRequest] by checking camera permissions.
+     * Returns a 403 response with an error message if permission is denied.
+     */
     override fun handle(request: OpenCameraRequest): OpenCameraResponse {
         if (!hasCameraPermission()) {
             return OpenCameraResponse(
@@ -32,6 +36,12 @@ class OpenCameraHandler(
         )
     }
 
+
+    /**
+     * Opens the rear camera and holds its resource by binding an
+     * ImageAnalysis use case with a no-op analyzer. Prevents other
+     * apps from using the camera while keeping processing minimal.
+     */
     private fun openCameraAndHoldResource() {
         withCameraProvider { cameraProvider ->
             Log.i("CameraX", "CameraProvider ready (holding resource)")

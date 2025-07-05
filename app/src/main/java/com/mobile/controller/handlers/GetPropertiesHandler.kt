@@ -11,6 +11,10 @@ import kotlinx.serialization.json.Json
 class GetPropertiesHandler : ApiHandler<GetPropertiesRequest, GetPropertiesResponse> {
     override val path: String = "/api/get_properties"
 
+    /**
+     * Handles a [GetPropertiesRequest] by retrieving device information
+     * and returning it as a JSON-encoded response.
+     */
     override fun handle(request: GetPropertiesRequest): GetPropertiesResponse {
         val deviceInfo = getDeviceInfo()
         return GetPropertiesResponse(body = Json.encodeToString(deviceInfo))
@@ -26,7 +30,13 @@ class GetPropertiesHandler : ApiHandler<GetPropertiesRequest, GetPropertiesRespo
         val abis: String
     )
 
-        private fun getDeviceInfo() : DeviceInfo {
+    /**
+     * Gathers and returns device information, including Android version,
+     * SDK level, model, manufacturer, fingerprint, and supported ABIs.
+     *
+     * @return a [DeviceInfo] object with the current device details.
+     */
+    private fun getDeviceInfo() : DeviceInfo {
         return DeviceInfo(
             androidVersion = android.os.Build.VERSION.RELEASE ?: "unknown",
             sdkInt = android.os.Build.VERSION.SDK_INT,

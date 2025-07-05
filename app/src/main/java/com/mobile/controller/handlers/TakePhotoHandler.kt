@@ -19,6 +19,10 @@ class TakePhotoHandler(
 
     override val path: String = "/api/take_photo"
 
+    /**
+     * Handles a [TakePhotoRequest] by checking camera permission.
+     * Returns a 403 response if permission is denied.
+     */
     override fun handle(request: TakePhotoRequest): TakePhotoResponse {
         if (!hasCameraPermission()) {
             return TakePhotoResponse(
@@ -35,6 +39,14 @@ class TakePhotoHandler(
         )
     }
 
+    /**
+     * Captures a single photo and then releases the camera resource.
+     *
+     * Binds an [ImageCapture] use case, takes a photo to the given [savePath],
+     * and unbinds afterward to free the camera.
+     *
+     * @param savePath the file path where the captured photo will be saved.
+     */
     private fun capturePhotoOnceAndRelease(savePath: String) {
         withCameraProvider { cameraProvider ->
             val imageCapture = ImageCapture.Builder()
@@ -58,18 +70,37 @@ class TakePhotoHandler(
         }
     }
 
+    /**
+     * Captures a photo and saves it to a timestamped file in the specified directory.
+     *
+     * Creates the directory if it doesn't exist, then takes a picture using the given
+     * [ImageCapture] instance. On success or failure, logs the outcome and releases
+     * the camera by unbinding all use cases.
+     *
+     * @param cameraProvider the [ProcessCameraProvider] managing the camera lifecycle.
+     * @param imageCapture the [ImageCapture] use case used to take the photo.
+     * @param saveDirectory the directory path where the photo file will be saved.
+     */
     private fun takePhoto(
         cameraProvider: ProcessCameraProvider,
         imageCapture: ImageCapture,
-        savePath: String
+        saveDirectory: String
     ) {
-        val photoFile = File(savePath)
+        val directory = File(saveDirectory)
 
-        photoFile.parentFile?.mkdirs()
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+        val fileName = "photo_$timeStamp.jpg"
+
+        val photoFile = File(directory, fileName)
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-        Log.i("CameraX", "Calling takePicture")
+        Log.i("CameraX", "Calling takePicture to ${photoFile.absolutePath}")
+
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(context),
