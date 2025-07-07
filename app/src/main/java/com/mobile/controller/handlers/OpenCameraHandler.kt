@@ -3,7 +3,9 @@ package com.mobile.controller.handlers
 import android.content.Context
 import android.util.Log
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.mobile.controller.requests.OpenCameraRequest
@@ -11,15 +13,13 @@ import com.mobile.controller.requests.OpenCameraResponse
 
 class OpenCameraHandler(
     context: Context,
-    lifecycleOwner: LifecycleOwner
+    lifecycleOwner: LifecycleOwner,
+    private val previewView: PreviewView
 ) : BaseCameraHandler<OpenCameraRequest, OpenCameraResponse>(context, lifecycleOwner) {
+
 
     override val path: String = "/api/open_camera"
 
-    /**
-     * Handles an [OpenCameraRequest] by checking camera permissions.
-     * Returns a 403 response with an error message if permission is denied.
-     */
     override fun handle(request: OpenCameraRequest): OpenCameraResponse {
         if (!hasCameraPermission()) {
             return OpenCameraResponse(
@@ -28,7 +28,7 @@ class OpenCameraHandler(
             )
         }
 
-        openCameraAndHoldResource()
+        openCameraAndShowPreview()
 
         return OpenCameraResponse(
             status = 200,
@@ -36,24 +36,17 @@ class OpenCameraHandler(
         )
     }
 
+    private fun openCameraAndShowPreview() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 
-    /**
-     * Opens the rear camera and holds its resource by binding an
-     * ImageAnalysis use case with a no-op analyzer. Prevents other
-     * apps from using the camera while keeping processing minimal.
-     */
-    private fun openCameraAndHoldResource() {
-        withCameraProvider { cameraProvider ->
-            Log.i("CameraX", "CameraProvider ready (holding resource)")
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+            Log.i("CameraX", "CameraProvider ready (showing preview)")
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-
-            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
-                imageProxy.close()
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(previewView.surfaceProvider)
             }
 
             try {
@@ -61,11 +54,11 @@ class OpenCameraHandler(
                 cameraProvider.bindToLifecycle(
                     lifecycleOwner,
                     cameraSelector,
-                    imageAnalysis
+                    preview
                 )
             } catch (e: Exception) {
                 Log.e("CameraX", "Bind failed", e)
             }
-        }
+        }, ContextCompat.getMainExecutor(context))
     }
 }
