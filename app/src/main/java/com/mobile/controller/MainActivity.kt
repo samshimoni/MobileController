@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import android.Manifest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.view.PreviewView
+import androidx.compose.ui.viewinterop.AndroidView
 
 import com.mobile.controller.handlers.OpenCameraHandler
 import com.mobile.controller.handlers.TakePhotoHandler
@@ -50,10 +52,11 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
         )
+        val previewView = PreviewView(this)
 
         val handlers = listOf(
             GetPropertiesHandler(),
-            OpenCameraHandler(this, this),
+            OpenCameraHandler(this, this, previewView),
             TakePhotoHandler(this, this)
         )
 
@@ -69,28 +72,30 @@ class MainActivity : ComponentActivity() {
         setContent {
             ControllerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                    AndroidView(
+                        factory = { previewView },
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize()
                     )
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    @Composable
+    fun Greeting(name: String, modifier: Modifier = Modifier) {
+        Text(
+            text = "Hello $name!",
+            modifier = modifier
+        )
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ControllerTheme {
-        Greeting("Android")
+    @Preview(showBackground = true)
+    @Composable
+    fun GreetingPreview() {
+        ControllerTheme {
+            Greeting("Android")
+        }
     }
 }
