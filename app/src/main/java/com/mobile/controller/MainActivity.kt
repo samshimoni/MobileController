@@ -1,6 +1,5 @@
 package com.mobile.controller
 
-import com.mobile.controller.handlers.GetPropertiesHandler
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -13,8 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import android.Manifest
+import androidx.activity.result.contract.ActivityResultContracts
+
 import com.mobile.controller.handlers.OpenCameraHandler
 import com.mobile.controller.handlers.TakePhotoHandler
+import com.mobile.controller.handlers.GetPropertiesHandler
 
 import com.mobile.controller.network.WebServer
 import com.mobile.controller.network.ApiRouter
@@ -23,8 +26,30 @@ import com.mobile.controller.network.RequestFactory
 import com.mobile.controller.ui.theme.ControllerTheme
 
 class MainActivity : ComponentActivity() {
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.entries.forEach { entry ->
+                Log.d("MainActivity", "${entry.key} granted=${entry.value}")
+            }
+            val allGranted = permissions.all { it.value }
+            if (allGranted) {
+                Log.d("MainActivity", "All permissions granted.")
+            } else {
+                Log.d("MainActivity", "Some permissions were denied.")
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        )
 
         val handlers = listOf(
             GetPropertiesHandler(),
