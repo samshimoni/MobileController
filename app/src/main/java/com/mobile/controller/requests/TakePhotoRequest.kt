@@ -6,10 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TakePhotoRequest(
-    val path: String
-) : ApiRequest {
-    override val uri: String = "/api/take_photo"
-}
+    override val uri: String,
+) : ApiRequest
 
 data class TakePhotoResponse(
     override val status: Int = 200,

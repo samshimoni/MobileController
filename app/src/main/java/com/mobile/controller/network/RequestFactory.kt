@@ -16,7 +16,7 @@ class RequestFactory {
             OpenCameraRequest(uri)
         },
         "/api/take_photo" to { uri, method, params, body ->
-            Json.decodeFromString(TakePhotoRequest.serializer(), body)
+            TakePhotoRequest(uri)
         }
     )
 

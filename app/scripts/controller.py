@@ -21,13 +21,10 @@ def open_camera(base_url):
 
 def take_photo(base_url, photo_path):
     url = f"{base_url}/api/take_photo"
-    payload = {
-        "path": photo_path
-    }
 
     print(f"\nCalling {url} with path={photo_path} ...")
-    
-    response = (requests.post(url, json=payload)).json()
+
+    response = requests.get(url).json()
     print("Response:")
 
     decoded_image = decode_base64_to_bytes(response['image_base64'])
