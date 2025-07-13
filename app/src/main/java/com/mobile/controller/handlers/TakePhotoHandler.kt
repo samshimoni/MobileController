@@ -1,7 +1,8 @@
 package com.mobile.controller.handlers
 
 import android.content.Context
-import android.os.Environment
+
+import android.util.Base64
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -12,9 +13,8 @@ import androidx.lifecycle.LifecycleOwner
 import com.mobile.controller.requests.TakePhotoRequest
 import com.mobile.controller.requests.TakePhotoResponse
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.CountDownLatch
+
 
 class TakePhotoHandler(
     context: Context,
@@ -30,48 +30,44 @@ class TakePhotoHandler(
      */
     override fun handle(request: TakePhotoRequest): TakePhotoResponse {
         if (!hasCameraPermission()) {
+            val errorJson = """{"status":"error","message":"Permission Denied"}"""
             return TakePhotoResponse(
                 status = 403,
-                body = """{"status": "error", "message": "Permission Denied"}"""
+                contentType = "application/json",
+                body = errorJson
             )
         }
 
         val latch = CountDownLatch(1)
-        var success = false
+        var base64Image: String? = null
 
-        // Safe fallback directory
-        val safePath = request.path.ifEmpty {
-            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
-                ?: context.filesDir.absolutePath
-        }
-
-        capturePhotoOnceAndRelease(safePath) { result ->
-            success = result
+        capturePhotoOnceAndRelease { success, jpegBytes ->
+            if (success && jpegBytes != null) {
+                base64Image = Base64.encodeToString(jpegBytes, Base64.NO_WRAP)
+            }
             latch.countDown()
         }
 
         latch.await()
 
-        return if (success) {
+        return if (base64Image != null) {
+            val jsonResponse = """{"status":"success","image_base64":"$base64Image"}"""
             TakePhotoResponse(
                 status = 200,
-                body = """{"status": "success", "message": "Photo captured at $safePath"}"""
+                contentType = "application/json",
+                body = jsonResponse
             )
         } else {
+            val errorJson = """{"status":"error","message":"Failed to capture photo"}"""
             TakePhotoResponse(
                 status = 500,
-                body = """{"status": "error", "message": "Failed to save photo"}"""
+                contentType = "application/json",
+                body = errorJson
             )
         }
     }
 
-    /**
-     * Captures a single photo and then releases the camera resource.
-     *
-     * @param savePath the file path where the captured photo will be saved.
-     * @param onResult callback with true if success, false if failure.
-     */
-    private fun capturePhotoOnceAndRelease(savePath: String, onResult: (Boolean) -> Unit) {
+    private fun capturePhotoOnceAndRelease(onResult: (Boolean, ByteArray?) -> Unit) {
         withCameraProvider { cameraProvider ->
             val imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
@@ -86,60 +82,39 @@ class TakePhotoHandler(
                 )
             } catch (e: Exception) {
                 Log.e("CameraX", "Bind failed", e)
-                onResult(false)
+                onResult(false, null)
                 return@withCameraProvider
             }
 
-            takePhoto(cameraProvider, imageCapture, savePath, onResult)
+            takePhotoInMemory(cameraProvider, imageCapture, onResult)
         }
     }
 
-    /**
-     * Captures a photo and saves it to a timestamped file in the specified directory.
-     *
-     * @param cameraProvider the [ProcessCameraProvider] managing the camera lifecycle.
-     * @param imageCapture the [ImageCapture] use case used to take the photo.
-     * @param saveDirectory the directory path where the photo file will be saved.
-     * @param onResult callback indicating success or failure.
-     */
-    private fun takePhoto(
+    private fun takePhotoInMemory(
         cameraProvider: ProcessCameraProvider,
         imageCapture: ImageCapture,
-        saveDirectory: String,
-        onResult: (Boolean) -> Unit
+        onResult: (Boolean, ByteArray?) -> Unit
     ) {
-        val directory = File(saveDirectory)
+        val tempFile = File.createTempFile("photo_", ".jpg", context.cacheDir)
 
-        if (!directory.exists()) {
-            if (!directory.mkdirs()) {
-                Log.e("CameraX", "Failed to create directory: $saveDirectory")
-                onResult(false)
-                return
-            }
-        }
-
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "photo_$timeStamp.jpg"
-        val photoFile = File(directory, fileName)
-
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
-        Log.i("CameraX", "Calling takePicture to ${photoFile.absolutePath}")
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
 
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    Log.i("CameraX", "Photo saved: ${photoFile.absolutePath}")
+                    val bytes = tempFile.readBytes()
+                    tempFile.delete()
                     cameraProvider.unbindAll()
-                    onResult(true)
+                    onResult(true, bytes)
                 }
 
                 override fun onError(exception: ImageCaptureException) {
                     Log.e("CameraX", "Photo capture failed: ${exception.message}", exception)
+                    tempFile.delete()
                     cameraProvider.unbindAll()
-                    onResult(false)
+                    onResult(false, null)
                 }
             }
         )
