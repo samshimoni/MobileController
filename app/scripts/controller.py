@@ -1,6 +1,9 @@
 import requests
 import argparse
 import json
+import base64
+
+
 
 def get_properties(base_url):
     url = f"{base_url}/api/get_properties"
@@ -21,11 +24,29 @@ def take_photo(base_url, photo_path):
     payload = {
         "path": photo_path
     }
-    print(f"\nCalling {url} with path={photo_path} ...")
-    response = requests.post(url, json=payload)
-    print("Response:")
-    print(response.text)
 
+    print(f"\nCalling {url} with path={photo_path} ...")
+    
+    response = (requests.post(url, json=payload)).json()
+    print("Response:")
+
+    decoded_image = decode_base64_to_bytes(response['image_base64'])
+    write_bytes_to_file(photo_path, decoded_image)
+
+def decode_base64_to_bytes(base64_string: str) -> bytes:
+        try:
+            return base64.b64decode(base64_string)
+        except base64.binascii.Error as e:
+            print(f"Problem with taking the photo Invalid Base64 input: {e}")
+            return b''
+
+def write_bytes_to_file(file_path: str, data: bytes):
+    try:
+        with open(file_path, "wb") as f:
+            f.write(data)
+        print(f"✅ Successfully wrote to {file_path}")
+    except Exception as e:
+        print(f"Failed to write to {file_path}: {e}")
 def main():
     parser = argparse.ArgumentParser(description="Simple API CLI Tester")
     parser.add_argument("--ip", required=True, help="IP of the server")
