@@ -10,6 +10,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.mobile.controller.api.ApiHandler
 import com.mobile.controller.requests.TakePhotoRequest
 import com.mobile.controller.requests.TakePhotoResponse
 import java.io.File
@@ -17,9 +18,9 @@ import java.util.concurrent.CountDownLatch
 
 
 class TakePhotoHandler(
-    context: Context,
-    lifecycleOwner: LifecycleOwner
-) : BaseCameraHandler<TakePhotoRequest, TakePhotoResponse>(context, lifecycleOwner) {
+    private val context: Context,
+    private val lifecycleOwner: LifecycleOwner
+) : ApiHandler<TakePhotoRequest, TakePhotoResponse> {
 
     override val path: String = "/api/take_photo"
 
@@ -28,16 +29,8 @@ class TakePhotoHandler(
      * Returns a 403 response if permission is denied.
      * Returns a 500 response if photo capture fails.
      */
-    override fun handle(request: TakePhotoRequest): TakePhotoResponse {
-        if (!hasCameraPermission()) {
-            val errorJson = """{"status":"error","message":"Permission Denied"}"""
-            return TakePhotoResponse(
-                status = 403,
-                contentType = "application/json",
-                body = errorJson
-            )
-        }
 
+    override fun handle(request: TakePhotoRequest): TakePhotoResponse {
         val latch = CountDownLatch(1)
         var base64Image: String? = null
 
@@ -88,6 +81,26 @@ class TakePhotoHandler(
 
             takePhotoInMemory(cameraProvider, imageCapture, onResult)
         }
+    }
+
+    /**
+     * Asynchronously obtains the [ProcessCameraProvider] and invokes [onReady]
+     * when it is available. Logs errors if retrieval fails.
+     *
+     * @param onReady callback to receive the ready [ProcessCameraProvider].
+     */
+
+    protected fun withCameraProvider(onReady: (ProcessCameraProvider) -> Unit) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                onReady(cameraProvider)
+            } catch (e: Exception) {
+                Log.e("CameraX", "Error retrieving camera provider", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     private fun takePhotoInMemory(

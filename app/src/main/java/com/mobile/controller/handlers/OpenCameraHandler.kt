@@ -8,25 +8,19 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.mobile.controller.api.ApiHandler
 import com.mobile.controller.requests.OpenCameraRequest
 import com.mobile.controller.requests.OpenCameraResponse
 
 class OpenCameraHandler(
-    context: Context,
-    lifecycleOwner: LifecycleOwner,
+    private val context: Context,
+    private val lifecycleOwner: LifecycleOwner,
     private val previewView: PreviewView
-) : BaseCameraHandler<OpenCameraRequest, OpenCameraResponse>(context, lifecycleOwner) {
-
+) : ApiHandler<OpenCameraRequest, OpenCameraResponse> {
 
     override val path: String = "/api/open_camera"
 
     override fun handle(request: OpenCameraRequest): OpenCameraResponse {
-        if (!hasCameraPermission()) {
-            return OpenCameraResponse(
-                status = 403,
-                body = """{"status":"error","message":"Camera permission denied"}"""
-            )
-        }
 
         openCameraAndShowPreview()
 
